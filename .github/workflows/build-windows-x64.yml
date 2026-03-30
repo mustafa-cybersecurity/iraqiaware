@@ -8,6 +8,9 @@ on:
       - master
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: windows-latest
@@ -24,6 +27,7 @@ jobs:
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
+          # Pinned to a known-good commit for reproducible dependency resolution.
           vcpkgGitCommitId: 4c7f0ec2c7f4f6b9b2b0408f2b1f6d4d9fbb40b6
 
       - name: Configure (Release x64)
@@ -40,16 +44,22 @@ jobs:
       - name: Package executable
         shell: powershell
         run: |
-          New-Item -ItemType Directory -Path "$env:GITHUB_WORKSPACE\artifact" -Force | Out-Null
-          Copy-Item "build\x64\Release\iraqiaware.exe" "$env:GITHUB_WORKSPACE\artifact\iraqiaware.exe" -Force
-          if (Test-Path "build\x64\Release\resources") {
-            Copy-Item "build\x64\Release\resources" "$env:GITHUB_WORKSPACE\artifact\resources" -Recurse -Force
+          $artifactDir = "$env:GITHUB_WORKSPACE\artifact"
+          $exe = Get-ChildItem "build" -Recurse -File -Filter "iraqiaware.exe" | Select-Object -First 1
+          if (-not $exe) {
+            throw "iraqiaware.exe was not found under the build directory."
           }
-          if (Test-Path "build\x64\Release\config") {
-            Copy-Item "build\x64\Release\config" "$env:GITHUB_WORKSPACE\artifact\config" -Recurse -Force
+          $buildOutput = $exe.Directory.FullName
+          New-Item -ItemType Directory -Path $artifactDir -Force | Out-Null
+          Copy-Item $exe.FullName "$artifactDir\iraqiaware.exe" -Force
+          if (Test-Path "$buildOutput\resources") {
+            Copy-Item "$buildOutput\resources" "$artifactDir\resources" -Recurse -Force
           }
-          Get-ChildItem "build\x64\Release" -File -Filter "*.dll" | ForEach-Object {
-            Copy-Item $_.FullName "$env:GITHUB_WORKSPACE\artifact" -Force
+          if (Test-Path "$buildOutput\config") {
+            Copy-Item "$buildOutput\config" "$artifactDir\config" -Recurse -Force
+          }
+          Get-ChildItem $buildOutput -File -Filter "*.dll" | ForEach-Object {
+            Copy-Item $_.FullName $artifactDir -Force
           }
 
       - name: Upload artifact
