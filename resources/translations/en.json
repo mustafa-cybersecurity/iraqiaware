@@ -1,0 +1,64 @@
+{
+  "app": {
+    "title": "CyberSecurity Awareness Monitorizer",
+    "tagline": "Powered by AI",
+    "version": "1.0.0"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "alerts": "Alerts",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "status": "Monitoring Status",
+    "threats": "Active Threats",
+    "last_scan": "Last Scan",
+    "screenshots": "Screenshots Taken",
+    "activity_log": "Activity Log"
+  },
+  "alerts": {
+    "title": "Security Alerts",
+    "weak_password": "Weak Password Detected",
+    "phishing": "Potential Phishing Detected",
+    "sensitive_data": "Sensitive Data Exposed",
+    "unsafe_browsing": "Unsafe Browsing Detected",
+    "malware": "Malware Indicator Detected",
+    "export_json": "Export JSON",
+    "export_csv": "Export CSV",
+    "clear_all": "Clear All"
+  },
+  "settings": {
+    "title": "Settings",
+    "general": "General",
+    "language": "Language",
+    "monitoring_startup": "Enable monitoring on startup",
+    "capture_interval": "Capture interval (seconds)",
+    "ai_provider": "AI Provider",
+    "provider": "Provider",
+    "api_key": "API Key",
+    "api_key_placeholder": "Enter your API key...",
+    "model": "Model",
+    "test_connection": "Test Connection",
+    "alerts_section": "Alerts",
+    "enable_notifications": "Enable notifications",
+    "enable_sound": "Enable sound alerts",
+    "save": "Save Settings"
+  },
+  "monitoring": {
+    "start": "Start Monitoring",
+    "stop": "Stop Monitoring",
+    "active": "Active",
+    "stopped": "Stopped"
+  },
+  "messages": {
+    "settings_saved": "Settings saved successfully.",
+    "settings_failed": "Failed to save settings.",
+    "api_success": "API connection successful!",
+    "api_failed": "Connection failed",
+    "no_api_key": "Please enter an API key first.",
+    "not_configured": "AI service not configured. Please set your API key in Settings.",
+    "no_threats": "No threats detected.",
+    "threats_found": "threat(s) detected!"
+  }
+}

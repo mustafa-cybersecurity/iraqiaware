@@ -1,0 +1,29 @@
+{
+  "app": {
+    "name": "CyberSecurity Awareness Monitorizer",
+    "version": "1.0.0",
+    "language": "en",
+    "theme": "dark"
+  },
+  "monitoring": {
+    "enabled": true,
+    "capture_interval_seconds": 5,
+    "max_screenshots_history": 100
+  },
+  "ai": {
+    "provider": "openai",
+    "api_key": "",
+    "model": "gpt-4o",
+    "timeout_seconds": 30
+  },
+  "alerts": {
+    "enabled": true,
+    "sound_enabled": true,
+    "notification_style": "toast"
+  },
+  "logging": {
+    "level": "info",
+    "max_file_size_mb": 10,
+    "retention_days": 7
+  }
+}
