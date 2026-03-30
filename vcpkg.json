@@ -1,0 +1,13 @@
+{
+  "name": "iraqiaware",
+  "version": "1.0.0",
+  "description": "CyberSecurity Awareness Monitorizer dependencies",
+  "dependencies": [
+    "curl",
+    "nlohmann-json",
+    "spdlog",
+    "openssl",
+    "qt6-base"
+  ],
+  "features": {}
+}

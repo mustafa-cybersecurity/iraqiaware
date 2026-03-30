@@ -1,0 +1,64 @@
+{
+  "app": {
+    "title": "برنامج الوعي بالأمان السيبراني",
+    "tagline": "مدعوم بالذكاء الاصطناعي",
+    "version": "1.0.0"
+  },
+  "nav": {
+    "dashboard": "لوحة التحكم",
+    "alerts": "التنبيهات",
+    "settings": "الإعدادات"
+  },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "status": "حالة المراقبة",
+    "threats": "التهديدات النشطة",
+    "last_scan": "آخر فحص",
+    "screenshots": "لقطات الشاشة",
+    "activity_log": "سجل النشاط"
+  },
+  "alerts": {
+    "title": "تنبيهات الأمان",
+    "weak_password": "تم اكتشاف كلمة مرور ضعيفة",
+    "phishing": "تم اكتشاف تصيد احتيالي محتمل",
+    "sensitive_data": "بيانات حساسة مكشوفة",
+    "unsafe_browsing": "تم اكتشاف تصفح غير آمن",
+    "malware": "تم اكتشاف مؤشر برامج ضارة",
+    "export_json": "تصدير JSON",
+    "export_csv": "تصدير CSV",
+    "clear_all": "مسح الكل"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "general": "عام",
+    "language": "اللغة",
+    "monitoring_startup": "تفعيل المراقبة عند بدء التشغيل",
+    "capture_interval": "فترة الالتقاط (ثانية)",
+    "ai_provider": "مزود الذكاء الاصطناعي",
+    "provider": "المزود",
+    "api_key": "مفتاح API",
+    "api_key_placeholder": "أدخل مفتاح API الخاص بك...",
+    "model": "النموذج",
+    "test_connection": "اختبار الاتصال",
+    "alerts_section": "التنبيهات",
+    "enable_notifications": "تفعيل الإشعارات",
+    "enable_sound": "تفعيل التنبيهات الصوتية",
+    "save": "حفظ الإعدادات"
+  },
+  "monitoring": {
+    "start": "بدء المراقبة",
+    "stop": "إيقاف المراقبة",
+    "active": "نشط",
+    "stopped": "متوقف"
+  },
+  "messages": {
+    "settings_saved": "تم حفظ الإعدادات بنجاح.",
+    "settings_failed": "فشل حفظ الإعدادات.",
+    "api_success": "تم الاتصال بنجاح!",
+    "api_failed": "فشل الاتصال",
+    "no_api_key": "الرجاء إدخال مفتاح API أولاً.",
+    "not_configured": "خدمة الذكاء الاصطناعي غير مهيأة. يرجى تعيين مفتاح API في الإعدادات.",
+    "no_threats": "لا توجد تهديدات.",
+    "threats_found": "تهديد/تهديدات مكتشفة!"
+  }
+}
