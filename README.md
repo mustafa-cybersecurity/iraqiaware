@@ -103,6 +103,12 @@ cmake --build . --config Release --parallel
 .\build\x64\Release\iraqiaware.exe
 ```
 
+### 4. Build Windows x64 EXE via GitHub Actions
+
+This repository includes a workflow at `.github/workflows/build-windows-x64.yml` that builds a **Release x64** executable on `windows-latest` and uploads an artifact named `iraqiaware-windows-x64`.
+
+You can trigger it from **Actions → Build Windows x64 EXE → Run workflow**, then download the artifact from the completed run.
+
 ---
 
 ## Configuration

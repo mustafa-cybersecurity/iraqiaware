@@ -121,15 +121,26 @@ add_custom_command(TARGET iraqiaware POST_BUILD
 
 # ── Windows: deploy Qt DLLs ──────────────────────────────────────────────────
 if(WIN32)
-    # windeployqt bundles the required Qt DLLs next to the .exe
-    add_custom_command(TARGET iraqiaware POST_BUILD
-        COMMAND "${Qt6_DIR}/../../../bin/windeployqt.exe"
-            --no-compiler-runtime
-            --no-translations
-            "$<TARGET_FILE:iraqiaware>"
-        COMMENT "Deploying Qt runtime..."
-        VERBATIM
+    find_program(WINDEPLOYQT_EXECUTABLE
+        NAMES windeployqt windeployqt.exe
+        HINTS
+            "${Qt6_DIR}/../../../bin"
+            "$ENV{Qt6_DIR}/../../../bin"
     )
+
+    if(WINDEPLOYQT_EXECUTABLE)
+        # windeployqt bundles the required Qt DLLs next to the .exe
+        add_custom_command(TARGET iraqiaware POST_BUILD
+            COMMAND "${WINDEPLOYQT_EXECUTABLE}"
+                --no-compiler-runtime
+                --no-translations
+                "$<TARGET_FILE:iraqiaware>"
+            COMMENT "Deploying Qt runtime..."
+            VERBATIM
+        )
+    else()
+        message(WARNING "windeployqt not found. The generated .exe may require Qt DLLs from the runtime environment.")
+    endif()
 endif()
 
 # ── Install rules ─────────────────────────────────────────────────────────────

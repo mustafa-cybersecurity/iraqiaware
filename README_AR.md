@@ -72,6 +72,12 @@ cmake --build . --config Release --parallel
 .\build\x64\Release\iraqiaware.exe
 ```
 
+### 4. بناء ملف Windows x64 EXE عبر GitHub Actions
+
+يحتوي المستودع على سير عمل في المسار `.github/workflows/build-windows-x64.yml` لبناء نسخة **Release x64** على `windows-latest` ورفع Artifact باسم `iraqiaware-windows-x64`.
+
+يمكنك تشغيله من **Actions → Build Windows x64 EXE → Run workflow** ثم تنزيل الـ Artifact من نتيجة التنفيذ.
+
 ---
 
 ## الإعداد
