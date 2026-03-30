@@ -25,7 +25,9 @@ endif()
 
 # Force x64 on Windows
 if(WIN32)
-    set(VCPKG_TARGET_TRIPLET "x64-windows" CACHE STRING "vcpkg triplet")
+    if(NOT DEFINED VCPKG_TARGET_TRIPLET)
+        set(VCPKG_TARGET_TRIPLET "x64-windows" CACHE STRING "vcpkg triplet")
+    endif()
 endif()
 
 # ── Output directories ────────────────────────────────────────────────────────

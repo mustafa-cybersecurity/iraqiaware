@@ -24,7 +24,7 @@ std::string generateAlertId() {
     static std::mt19937_64 rng(std::random_device{}());
     std::uniform_int_distribution<uint64_t> dist;
     std::ostringstream ss;
-    ss << "alert-" << std::hex << std::setw(12) << std::setfill('0') << dist(rng);
+    ss << "alert-" << std::hex << std::setw(16) << std::setfill('0') << dist(rng);
     return ss.str();
 }
 } // anonymous namespace
