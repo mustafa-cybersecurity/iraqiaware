@@ -1,0 +1,23 @@
+{
+  "_comment": "IraqiAware default configuration. This file is copied to the user's AppData on first run.",
+  "active_provider": "openai",
+  "active_model": "gpt-4o",
+  "custom_endpoint": "",
+  "api_keys": {
+    "openai": "",
+    "gemini": "",
+    "anthropic": "",
+    "ollama": "",
+    "custom": ""
+  },
+  "screenshot_interval_ms": 5000,
+  "language": "en",
+  "notifications_enabled": true,
+  "logging_enabled": true,
+  "log_level": "info",
+  "ui": {
+    "theme": "dark",
+    "window_width": 1100,
+    "window_height": 700
+  }
+}

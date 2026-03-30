@@ -1,0 +1,57 @@
+# ── Build directories ────────────────────────────────────────
+build/
+build-*/
+cmake-build-*/
+out/
+.cmake/
+
+# ── CMake generated files ────────────────────────────────────
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+_deps/
+
+# ── Compiled output ──────────────────────────────────────────
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.pdb
+*.ilk
+*.exp
+*.obj
+*.o
+
+# ── Qt artifacts ─────────────────────────────────────────────
+*.pro.user
+moc_*.cpp
+moc_*.h
+ui_*.h
+qrc_*.cpp
+*.qmlc
+*.jsc
+
+# ── IDE / editor ─────────────────────────────────────────────
+.vscode/
+.idea/
+*.user
+*.suo
+.vs/
+*.ncb
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# ── User-specific runtime config ─────────────────────────────
+# (API keys stored locally; never committed)
+user_config.json
+*.log
+
+# ── OS ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
