@@ -1,5 +1,5 @@
 {
-  "_comment": "IraqiAware default configuration. This file is copied to the user's AppData on first run.",
+  "_comment": "IraqiAware default configuration loaded at startup (session-only, not persisted).",
   "active_provider": "openai",
   "active_model": "gpt-4o",
   "custom_endpoint": "",
@@ -13,7 +13,7 @@
   "screenshot_interval_ms": 1000,
   "language": "en",
   "notifications_enabled": true,
-  "logging_enabled": true,
+  "logging_enabled": false,
   "external_api": {
     "enabled": false,
     "webhook_url": "",

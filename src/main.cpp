@@ -7,40 +7,23 @@
 #include "AlertSystem.h"
 
 #include <QApplication>
-#include <QDir>
-#include <QStandardPaths>
-#include <QFile>
 #include <QDebug>
 
 #include <spdlog/spdlog.h>
-#include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 /**
  * @brief Initialises the spdlog logging infrastructure.
  *
- * Creates a multi-sink logger that writes to both the console (coloured) and
- * a rotating log file in the user's AppData/Local/IraqiAware/logs directory.
+ * Creates a console-only logger (no persistent file logging).
  */
-static void initLogging(bool enableFileLog)
+static void initLogging(bool /*enableFileLog*/)
 {
     try {
         std::vector<spdlog::sink_ptr> sinks;
 
         // Console sink (coloured)
         sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
-
-        if (enableFileLog) {
-            const QString logDir =
-                QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
-                + QStringLiteral("/logs");
-            QDir().mkpath(logDir);
-            const std::string logPath = (logDir + QStringLiteral("/iraqiaware.log")).toStdString();
-
-            // 5 MB max, keep 3 rotated files
-            sinks.push_back(std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
-                logPath, 5 * 1024 * 1024, 3));
-        }
 
         auto logger = std::make_shared<spdlog::logger>("iraqiaware",
                                                         sinks.begin(), sinks.end());
@@ -66,7 +49,7 @@ int main(int argc, char *argv[])
     config.load();
 
     // ── Logging ───────────────────────────────────────────────────────────────
-    initLogging(config.loggingEnabled());
+    initLogging(false);
     spdlog::info("IraqiAware starting up (v{})", app.applicationVersion().toStdString());
 
     // ── Language ──────────────────────────────────────────────────────────────

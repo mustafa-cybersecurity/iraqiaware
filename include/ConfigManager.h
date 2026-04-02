@@ -8,9 +8,9 @@
 /**
  * @brief Loads, saves and exposes application configuration stored in JSON.
  *
- * On first run, default_config.json is copied to the user's config directory
- * (AppData/Local/IraqiAware on Windows).  All subsequent reads and writes use
- * the user copy so that the bundled defaults are never overwritten.
+ * Configuration is loaded from bundled defaults and kept in memory only.
+ * Runtime changes are applied for the current session and are not persisted
+ * to disk to preserve user privacy.
  */
 class ConfigManager : public QObject
 {
@@ -22,7 +22,7 @@ public:
 
     /** Load configuration; call once at startup. */
     bool load();
-    /** Persist current configuration to disk. */
+    /** Privacy mode: emits configSaved without writing to disk. */
     bool save();
 
     // ── Typed accessors ──────────────────────────────────────────────────────

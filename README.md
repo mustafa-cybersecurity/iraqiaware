@@ -20,8 +20,8 @@ English and Arabic support.
 | 🌐 **Bilingual** | Full English ↔ Arabic (RTL) UI localization |
 | 🔔 **Real-time Alerts** | In-app alert log + Windows system-tray notifications |
 | 🌐 **External Alert API** | Optional webhook forwarding for each detected threat |
-| 📝 **Logging** | Rotating log files via spdlog |
-| ⚙ **Config** | JSON configuration with per-provider API key storage |
+| 📝 **Logging** | Console-only logs (no persistent local log files) |
+| ⚙ **Config** | Session-only runtime settings (not persisted to disk) |
 
 ---
 
@@ -35,7 +35,7 @@ iraqiaware/
 │   ├── ScreenshotManager.cpp # Qt-based screen capture (5s interval)
 │   ├── AIServiceLayer.cpp    # REST API calls to AI providers
 │   ├── SecurityAnalyzer.cpp  # Parse AI output → structured threats
-│   ├── ConfigManager.cpp     # JSON config read/write
+│   ├── ConfigManager.cpp     # Session config (in-memory apply, no disk persistence)
 │   ├── LanguageManager.cpp   # EN/AR translation lookup
 │   ├── AlertSystem.cpp       # System-tray + in-app notifications
 │   └── MainWindow.cpp        # Dark-theme Qt6 UI (tabs)
@@ -47,7 +47,7 @@ iraqiaware/
 │   └── styles/
 │       └── dark_theme.qss    # Catppuccin Mocha Qt stylesheet
 ├── config/
-│   └── default_config.json   # Bundled defaults (copied on first run)
+│   └── default_config.json   # Bundled startup defaults
 ├── LICENSE
 └── .gitignore
 ```
@@ -65,28 +65,45 @@ iraqiaware/
 | nlohmann/json | ≥ 3.11 | Auto-fetched via FetchContent if not found |
 | spdlog | ≥ 1.13 | Auto-fetched via FetchContent if not found |
 
-### Windows (MSVC + vcpkg)
+### Windows EXE Build (MSVC + vcpkg) — Detailed
 
 ```powershell
-# 1. Install vcpkg dependencies
-vcpkg install curl qt6-base nlohmann-json spdlog
+# 1) Open "x64 Native Tools Command Prompt for VS 2022" (recommended)
+# 2) Clone and bootstrap vcpkg (if not installed)
+git clone https://github.com/microsoft/vcpkg C:\vcpkg
+C:\vcpkg\bootstrap-vcpkg.bat
 
-# 2. Configure
-cmake -B build -G "Visual Studio 17 2022" -A x64 ^
-      -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+# 3) Install dependencies
+C:\vcpkg\vcpkg.exe install curl qt6-base nlohmann-json spdlog
 
-# 3. Build
-cmake --build build --config Release
+# 4) Configure project for Release x64
+cd <path-to-repo>\iraqiaware
+cmake -S . -B build\windows-msvc-release -G "Visual Studio 17 2022" -A x64 ^
+  -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake ^
+  -DCMAKE_BUILD_TYPE=Release
+
+# 5) Build EXE
+cmake --build build\windows-msvc-release --config Release
+
+# 6) Result
+# EXE path:
+# build\windows-msvc-release\Release\IraqiAware.exe
+# Runtime resources copied beside EXE:
+# build\windows-msvc-release\Release\resources
+# build\windows-msvc-release\Release\config
 ```
 
 ### Windows (Easy one-command with CMake Presets)
 
 ```powershell
-# Configure
+# Configure (Visual Studio 2022 x64 Release)
 cmake --preset windows-msvc-release
 
-# Build
+# Build EXE
 cmake --build --preset build-windows-msvc-release
+
+# EXE:
+# build\windows-msvc-release\Release\IraqiAware.exe
 ```
 
 ### Windows (MinGW)
@@ -101,13 +118,9 @@ cmake --build build
 
 ## ⚙ Configuration
 
-On first launch, `config/default_config.json` is copied to:
-
-```
-%LOCALAPPDATA%\MustafaCybersecurity\IraqiAware\config.json
-```
-
-Edit via the **Settings** tab in the application, or directly in the JSON file.
+- Settings are loaded from `config/default_config.json`.
+- All changes from **Settings** are applied in memory for the current session only.
+- No user configuration file is written to `%LOCALAPPDATA%`.
 
 ### Supported AI Providers
 
@@ -158,8 +171,8 @@ Payload example:
 
 ## 🔒 Security Notes
 
-- API keys are stored **only** in the local user config file
-  (`%LOCALAPPDATA%\…\config.json`) and are never committed to version control.
+- API keys and app settings are **not persisted to disk** by the app.
+- Runtime logs are **console-only**; no rotating file logs are written.
 - Screenshots are sent **directly** to the configured AI endpoint over HTTPS;
   no third-party relay is involved.
 - The application captures the **primary monitor** only.

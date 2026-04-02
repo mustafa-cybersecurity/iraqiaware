@@ -419,14 +419,14 @@ QWidget *MainWindow::buildSettingsPage()
     m_notificationsCheck->setChecked(true);
     appLayout->addWidget(m_notificationsCheck, 1, 0, 1, 2);
 
-    m_loggingCheck = new QCheckBox(QStringLiteral("Enable logging to file"));
-    m_loggingCheck->setChecked(true);
+    m_loggingCheck = new QCheckBox(QStringLiteral("Enable console logs (no file storage)"));
+    m_loggingCheck->setChecked(false);
     appLayout->addWidget(m_loggingCheck, 2, 0, 1, 2);
 
     layout->addWidget(appGroup);
 
     // ── Save button ──────────────────────────────────────────────────────────
-    m_saveSettingsBtn = new QPushButton(QStringLiteral("💾  Save Settings"));
+    m_saveSettingsBtn = new QPushButton(QStringLiteral("✅  Apply Settings"));
     m_saveSettingsBtn->setMinimumHeight(36);
     connect(m_saveSettingsBtn, &QPushButton::clicked,
             this,              &MainWindow::onSettingsSaveClicked);
@@ -589,7 +589,7 @@ void MainWindow::onSettingsSaveClicked()
         retranslateUi();
     }
 
-    updateStatusBar(QStringLiteral("Settings saved."));
+    updateStatusBar(QStringLiteral("Settings applied for this session only (not saved to disk)."));
 }
 
 void MainWindow::onLanguageChanged(int /*index*/)

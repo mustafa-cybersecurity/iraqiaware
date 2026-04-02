@@ -44,16 +44,7 @@ bool ConfigManager::load()
 
 bool ConfigManager::save()
 {
-    QFile file(m_configPath);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        qWarning() << "ConfigManager: cannot write" << m_configPath;
-        return false;
-    }
-
-    const std::string dump = m_config.dump(4);
-    file.write(dump.c_str(), static_cast<qint64>(dump.size()));
-    file.close();
-
+    // Privacy-first mode: keep configuration in memory only.
     emit configSaved();
     return true;
 }
@@ -262,22 +253,14 @@ QString ConfigManager::configFilePath() const
 
 void ConfigManager::ensureUserConfigExists()
 {
-    const QString dir = userConfigDir();
-    QDir().mkpath(dir);
-    m_configPath = dir + QStringLiteral("/config.json");
-
-    if (!QFile::exists(m_configPath)) {
-        // Copy bundled defaults
-        QString defaultPath = QCoreApplication::applicationDirPath()
-                              + QStringLiteral("/config/default_config.json");
-        if (!QFile::exists(defaultPath)) {
-            // Fallback: try the source tree location
-            defaultPath = QStringLiteral(":/config/default_config.json");
-        }
-        QFile::copy(defaultPath, m_configPath);
-        QFile::setPermissions(m_configPath,
-                              QFileDevice::ReadOwner | QFileDevice::WriteOwner);
+    // Privacy-first mode: always read bundled defaults, never write user config.
+    QString defaultPath = QCoreApplication::applicationDirPath()
+                          + QStringLiteral("/config/default_config.json");
+    if (!QFile::exists(defaultPath)) {
+        // Fallback for development environments
+        defaultPath = QDir::currentPath() + QStringLiteral("/config/default_config.json");
     }
+    m_configPath = defaultPath;
 }
 
 QString ConfigManager::userConfigDir() const
