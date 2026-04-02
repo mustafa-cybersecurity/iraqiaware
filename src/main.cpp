@@ -17,7 +17,7 @@
  *
  * Creates a console-only logger (no persistent file logging).
  */
-static void initLogging(bool /*enableFileLog*/)
+static void initLogging()
 {
     try {
         std::vector<spdlog::sink_ptr> sinks;
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     config.load();
 
     // ── Logging ───────────────────────────────────────────────────────────────
-    initLogging(false);
+    initLogging();
     spdlog::info("IraqiAware starting up (v{})", app.applicationVersion().toStdString());
 
     // ── Language ──────────────────────────────────────────────────────────────

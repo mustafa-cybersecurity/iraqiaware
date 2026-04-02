@@ -10,7 +10,7 @@
     "ollama": "",
     "custom": ""
   },
-  "screenshot_interval_ms": 1000,
+  "screenshot_interval_ms": 5000,
   "language": "en",
   "notifications_enabled": true,
   "logging_enabled": false,

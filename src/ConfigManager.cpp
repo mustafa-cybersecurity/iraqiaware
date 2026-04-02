@@ -45,6 +45,8 @@ bool ConfigManager::load()
 bool ConfigManager::save()
 {
     // Privacy-first mode: keep configuration in memory only.
+    // Signal is still emitted so UI flows that rely on "save completed"
+    // continue to work without any persistent disk write.
     emit configSaved();
     return true;
 }

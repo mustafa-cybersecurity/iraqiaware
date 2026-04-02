@@ -7,6 +7,8 @@ screen every 5 seconds, sends the image to an AI model of your choice, and
 surfaces actionable security alerts – all within a sleek dark-themed GUI with
 English and Arabic support.
 
+> Note: The primary target is Windows desktop. Since the app uses Qt 6, parts can be built on other platforms if equivalent dependencies are available.
+
 ---
 
 ## ✨ Features
