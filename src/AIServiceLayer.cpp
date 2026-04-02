@@ -4,8 +4,10 @@
 #include <nlohmann/json.hpp>
 #include <curl/curl.h>
 
+#include <chrono>
 #include <stdexcept>
 #include <sstream>
+#include <thread>
 #include <vector>
 
 using json = nlohmann::json;
@@ -61,33 +63,66 @@ void AIServiceLayer::analyzeScreenshot(const std::string& base64Image,
         return;
     }
 
+    std::string body;
     try {
-        std::string body = buildRequestBody(base64Image);
+        body = buildRequestBody(base64Image);
+    } catch (const std::exception& e) {
+        if (callback) callback(false, "", e.what());
+        return;
+    }
 
-        std::map<std::string, std::string> headers;
-        headers["Content-Type"] = "application/json";
+    std::map<std::string, std::string> headers;
+    headers["Content-Type"] = "application/json";
+    if (m_provider == "openai") {
+        headers["Authorization"] = "Bearer " + m_apiKey;
+    }
 
-        if (m_provider == "openai") {
-            headers["Authorization"] = "Bearer " + m_apiKey;
-        } else if (m_provider == "google") {
-            // Google Cloud Vision uses API key in URL query param; no auth header needed
+    const std::string url = getEndpointUrl();
+
+    for (int attempt = 0; attempt <= m_maxRetries; ++attempt) {
+        if (attempt > 0) {
+            // Exponential backoff: 1 s, 2 s, 4 s, …
+            const int delaySec = (1 << (attempt - 1));
+            LOG_INFO("AIServiceLayer: retry " + std::to_string(attempt) +
+                     "/" + std::to_string(m_maxRetries) +
+                     " after " + std::to_string(delaySec) + " s");
+            std::this_thread::sleep_for(std::chrono::seconds(delaySec));
         }
 
-        std::string responseBody;
-        long status = httpPost(getEndpointUrl(), body, headers, responseBody);
+        try {
+            std::string responseBody;
+            const long status = httpPost(url, body, headers, responseBody);
 
-        if (status >= 200 && status < 300) {
-            std::string parsed = parseResponse(responseBody);
-            if (callback) callback(true, parsed, "");
-        } else {
+            if (status >= 200 && status < 300) {
+                std::string parsed = parseResponse(responseBody);
+                if (callback) callback(true, parsed, "");
+                return;
+            }
+
+            // Rate-limited or server error → retry
+            if (status == 429 || status >= 500) {
+                LOG_WARNING("AIServiceLayer: HTTP " + std::to_string(status) +
+                            " – will retry");
+                continue;
+            }
+
+            // Any other client-side error → do not retry
             std::string errMsg = "HTTP " + std::to_string(status) + ": " + responseBody;
             LOG_ERROR("AIServiceLayer request failed: " + errMsg);
             if (callback) callback(false, "", errMsg);
+            return;
+
+        } catch (const std::exception& e) {
+            LOG_ERROR(std::string("AIServiceLayer exception: ") + e.what());
+            if (attempt == m_maxRetries) {
+                if (callback) callback(false, "", e.what());
+                return;
+            }
+            // network error – retry
         }
-    } catch (const std::exception& e) {
-        LOG_ERROR(std::string("AIServiceLayer exception: ") + e.what());
-        if (callback) callback(false, "", e.what());
     }
+
+    if (callback) callback(false, "", "Max retries exceeded");
 }
 
 // ── Build request body ────────────────────────────────────────────────────────

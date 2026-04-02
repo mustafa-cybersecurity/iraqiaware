@@ -56,6 +56,8 @@ set(SOURCES
     src/LanguageManager.cpp
     src/AlertSystem.cpp
     src/LoggingSystem.cpp
+    src/AsyncAnalyzer.cpp
+    src/CacheManager.cpp
 )
 
 set(HEADERS
@@ -68,6 +70,8 @@ set(HEADERS
     include/AlertSystem.h
     include/LoggingSystem.h
     include/ThreatModel.h
+    include/AsyncAnalyzer.h
+    include/CacheManager.h
 )
 
 # ── Executable ────────────────────────────────────────────────────────────────

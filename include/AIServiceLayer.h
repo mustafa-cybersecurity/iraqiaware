@@ -43,6 +43,11 @@ public:
     // Set request timeout in seconds
     void setTimeout(int seconds) { m_timeoutSec = seconds; }
 
+    // Maximum number of retry attempts on transient failures (429 / 5xx)
+    // Set to 0 to disable retries.  Default is 3.
+    void setMaxRetries(int n) { m_maxRetries = (n >= 0) ? n : 0; }
+    int  getMaxRetries() const { return m_maxRetries; }
+
     /**
      * Analyse a screenshot (supplied as Base64-encoded PNG/JPEG).
      * The prompt instructs the model to look for cybersecurity threats.
@@ -78,6 +83,7 @@ private:
     std::string m_apiKey;
     std::string m_model      = "gpt-4o";
     int         m_timeoutSec = 30;
+    int         m_maxRetries = 3;
 
     // System prompt template sent to the vision model
     static constexpr const char* kSystemPrompt =

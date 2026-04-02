@@ -46,6 +46,13 @@ public:
     // Total screenshots captured since start()
     uint64_t getCaptureCount() const { return m_captureCount.load(); }
 
+    // Enable/disable delta detection.
+    // When enabled, the capture callback is only invoked when the screen
+    // content has changed since the previous capture (hash comparison).
+    // Enabled by default.
+    void setDeltaDetectionEnabled(bool enabled);
+    bool isDeltaDetectionEnabled() const { return m_deltaDetection; }
+
 private:
     // Background thread entry point
     void captureLoop();
@@ -59,6 +66,9 @@ private:
     // Ensure the screenshots output directory exists
     void ensureOutputDir();
 
+    // Compute a fast hash over sampled bytes of a Base64 image string
+    static std::string computeImageHash(const std::string& base64Data);
+
 private:
     std::atomic<bool>  m_running{false};
     std::thread        m_thread;
@@ -68,6 +78,9 @@ private:
     std::string        m_outputDir;
     std::string        m_lastScreenshotPath;
     std::atomic<uint64_t> m_captureCount{0};
+
+    bool        m_deltaDetection   = true;
+    std::string m_lastCaptureHash;
 
     static constexpr const char* kOutputDir = "screenshots";
 };
