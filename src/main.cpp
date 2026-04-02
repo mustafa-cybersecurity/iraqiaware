@@ -103,6 +103,10 @@ int main(int argc, char *argv[])
 
     // ── Alert system tray ────────────────────────────────────────────────────
     alertSystem.setNotificationsEnabled(config.notificationsEnabled());
+    alertSystem.configureExternalApi(
+        config.externalApiEnabled(),
+        config.externalApiWebhookUrl(),
+        config.externalApiKey());
     alertSystem.initialise();
 
     // ── Main window ───────────────────────────────────────────────────────────

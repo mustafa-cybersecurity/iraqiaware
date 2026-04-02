@@ -5,6 +5,7 @@
 #include <QString>
 #include <QSystemTrayIcon>
 #include <QMenu>
+#include <QNetworkAccessManager>
 #include <vector>
 
 /**
@@ -51,6 +52,7 @@ public:
 
     bool notificationsEnabled() const;
     void setNotificationsEnabled(bool enabled);
+    void configureExternalApi(bool enabled, const QString &webhookUrl, const QString &apiKey);
 
 signals:
     /** Emitted for each individual alert shown. */
@@ -68,13 +70,18 @@ private slots:
 
 private:
     void showTrayNotification(const Alert &alert);
+    void forwardAlertToExternalApi(const Alert &alert);
     void updateTrayTooltip();
     static QSystemTrayIcon::MessageIcon severityToIcon(SecurityAnalyzer::Severity s);
 
     QSystemTrayIcon *m_trayIcon{nullptr};
     QMenu           *m_trayMenu{nullptr};
+    QNetworkAccessManager m_networkManager;
     std::vector<Alert> m_alerts;
     bool             m_notificationsEnabled{true};
+    bool             m_externalApiEnabled{false};
+    QString          m_externalApiWebhookUrl;
+    QString          m_externalApiKey;
 };
 
 Q_DECLARE_METATYPE(AlertSystem::Alert)

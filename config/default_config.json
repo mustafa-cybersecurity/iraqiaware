@@ -10,10 +10,15 @@
     "ollama": "",
     "custom": ""
   },
-  "screenshot_interval_ms": 5000,
+  "screenshot_interval_ms": 1000,
   "language": "en",
   "notifications_enabled": true,
   "logging_enabled": true,
+  "external_api": {
+    "enabled": false,
+    "webhook_url": "",
+    "api_key": ""
+  },
   "log_level": "info",
   "ui": {
     "theme": "dark",

@@ -184,6 +184,51 @@ void ConfigManager::setLoggingEnabled(bool enabled)
     emit configChanged(QStringLiteral("logging_enabled"));
 }
 
+QString ConfigManager::externalApiWebhookUrl() const
+{
+    try {
+        return QString::fromStdString(m_config.at("external_api").at("webhook_url").get<std::string>());
+    } catch (...) {
+        return {};
+    }
+}
+
+void ConfigManager::setExternalApiWebhookUrl(const QString &url)
+{
+    m_config["external_api"]["webhook_url"] = url.toStdString();
+    emit configChanged(QStringLiteral("external_api.webhook_url"));
+}
+
+QString ConfigManager::externalApiKey() const
+{
+    try {
+        return QString::fromStdString(m_config.at("external_api").at("api_key").get<std::string>());
+    } catch (...) {
+        return {};
+    }
+}
+
+void ConfigManager::setExternalApiKey(const QString &key)
+{
+    m_config["external_api"]["api_key"] = key.toStdString();
+    emit configChanged(QStringLiteral("external_api.api_key"));
+}
+
+bool ConfigManager::externalApiEnabled() const
+{
+    try {
+        return m_config.at("external_api").at("enabled").get<bool>();
+    } catch (...) {
+        return false;
+    }
+}
+
+void ConfigManager::setExternalApiEnabled(bool enabled)
+{
+    m_config["external_api"]["enabled"] = enabled;
+    emit configChanged(QStringLiteral("external_api.enabled"));
+}
+
 QVariant ConfigManager::value(const QString &key, const QVariant &defaultValue) const
 {
     try {

@@ -52,6 +52,7 @@ public:
     void cancelPendingRequests();
 
     bool isConfigured() const;
+    bool isBusy() const;
 
 signals:
     /** Emitted when the AI returns a response.
@@ -64,6 +65,7 @@ signals:
 
     /** Emitted while a request is in progress (0-100). */
     void requestProgress(int percent);
+    void busyChanged(bool busy);
 
 private slots:
     void onReplyFinished(QNetworkReply *reply);
@@ -80,4 +82,6 @@ private:
     QString  m_model{"gpt-4o"};
     QString  m_customEndpoint;
     int      m_timeoutMs{30000};
+    bool     m_requestInFlight{false};
+    QByteArray m_pendingImageBytes;
 };

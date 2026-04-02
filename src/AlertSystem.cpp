@@ -4,6 +4,10 @@
 #include <QStyle>
 #include <QAction>
 #include <QDebug>
+#include <QNetworkRequest>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QUrl>
 
 // ── Constructor / Destructor ──────────────────────────────────────────────────
 
@@ -64,6 +68,7 @@ void AlertSystem::processThreats(const std::vector<SecurityAnalyzer::Threat> &th
         m_alerts.insert(m_alerts.begin(), std::move(alert));
 
         showTrayNotification(m_alerts.front());
+        forwardAlertToExternalApi(m_alerts.front());
         emit alertRaised(m_alerts.front());
     }
 
@@ -101,6 +106,13 @@ void AlertSystem::setNotificationsEnabled(bool enabled)
     m_notificationsEnabled = enabled;
 }
 
+void AlertSystem::configureExternalApi(bool enabled, const QString &webhookUrl, const QString &apiKey)
+{
+    m_externalApiEnabled = enabled;
+    m_externalApiWebhookUrl = webhookUrl.trimmed();
+    m_externalApiKey = apiKey;
+}
+
 // ── Private slots ─────────────────────────────────────────────────────────────
 
 void AlertSystem::onTrayActivated(QSystemTrayIcon::ActivationReason reason)
@@ -127,6 +139,28 @@ void AlertSystem::showTrayNotification(const Alert &alert)
 
     m_trayIcon->showMessage(title, alert.message,
                             severityToIcon(alert.severity), 5000);
+}
+
+void AlertSystem::forwardAlertToExternalApi(const Alert &alert)
+{
+    if (!m_externalApiEnabled || m_externalApiWebhookUrl.isEmpty()) return;
+
+    QNetworkRequest request{QUrl(m_externalApiWebhookUrl)};
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader("Accept", "application/json");
+    if (!m_externalApiKey.isEmpty()) {
+        request.setRawHeader("Authorization", ("Bearer " + m_externalApiKey).toUtf8());
+    }
+
+    QJsonObject payload;
+    payload["source"] = "IraqiAware";
+    payload["severity"] = SecurityAnalyzer::severityLabel(alert.severity);
+    payload["category"] = alert.category;
+    payload["message"] = alert.message;
+    payload["recommendation"] = alert.recommendation;
+    payload["timestamp"] = alert.timestamp.toString(Qt::ISODate);
+
+    m_networkManager.post(request, QJsonDocument(payload).toJson(QJsonDocument::Compact));
 }
 
 void AlertSystem::updateTrayTooltip()

@@ -5,6 +5,7 @@
 #include <QBuffer>
 #include <QPixmap>
 #include <QGuiApplication>
+#include <algorithm>
 
 ScreenshotManager::ScreenshotManager(QObject *parent)
     : QObject(parent)
@@ -20,15 +21,19 @@ ScreenshotManager::~ScreenshotManager()
 
 void ScreenshotManager::start(int intervalMs)
 {
-    m_intervalMs = intervalMs;
+    m_intervalMs = std::clamp(intervalMs, 250, 60000);
     m_running    = true;
+    m_timer.setTimerType(Qt::PreciseTimer);
     m_timer.start(m_intervalMs);
+    emit captureStarted();
+    onTimerTimeout(); // immediate first capture for real-time responsiveness
 }
 
 void ScreenshotManager::stop()
 {
     m_running = false;
     m_timer.stop();
+    emit captureStopped();
 }
 
 bool ScreenshotManager::isRunning() const

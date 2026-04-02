@@ -50,6 +50,15 @@ public:
     bool     loggingEnabled() const;
     void     setLoggingEnabled(bool enabled);
 
+    QString  externalApiWebhookUrl() const;
+    void     setExternalApiWebhookUrl(const QString &url);
+
+    QString  externalApiKey() const;
+    void     setExternalApiKey(const QString &key);
+
+    bool     externalApiEnabled() const;
+    void     setExternalApiEnabled(bool enabled);
+
     /** Generic get/set for arbitrary keys (dot-separated path). */
     QVariant value(const QString &key, const QVariant &defaultValue = {}) const;
     void     setValue(const QString &key, const QVariant &value);

@@ -50,6 +50,11 @@ bool AIServiceLayer::isConfigured() const
     return !m_apiKey.isEmpty();
 }
 
+bool AIServiceLayer::isBusy() const
+{
+    return m_requestInFlight;
+}
+
 void AIServiceLayer::cancelPendingRequests()
 {
     // Qt cleans up automatically; we could iterate manager replies if needed.
@@ -59,6 +64,12 @@ void AIServiceLayer::cancelPendingRequests()
 
 void AIServiceLayer::analyzeScreenshot(const QByteArray &imageBytes)
 {
+    if (m_requestInFlight) {
+        // Keep only the most recent frame so we process live data and avoid backlog.
+        m_pendingImageBytes = imageBytes;
+        return;
+    }
+
     if (!isConfigured()) {
         emit analysisError(QStringLiteral("AI service not configured. Please set your API key in Settings."));
         return;
@@ -92,6 +103,8 @@ void AIServiceLayer::analyzeScreenshot(const QByteArray &imageBytes)
 
     QByteArray body = buildRequestBody(imageBytes);
     m_networkManager.post(request, body);
+    m_requestInFlight = true;
+    emit busyChanged(true);
     emit requestProgress(10);
 }
 
@@ -269,9 +282,19 @@ QByteArray AIServiceLayer::buildRequestBody(const QByteArray &imageBytes) const
 void AIServiceLayer::onReplyFinished(QNetworkReply *reply)
 {
     reply->deleteLater();
+    auto finishRequestAndDispatchPending = [this]() {
+        m_requestInFlight = false;
+        emit busyChanged(false);
+        if (!m_pendingImageBytes.isEmpty()) {
+            const QByteArray next = m_pendingImageBytes;
+            m_pendingImageBytes.clear();
+            analyzeScreenshot(next);
+        }
+    };
 
     if (reply->error() != QNetworkReply::NoError) {
         emit analysisError(QStringLiteral("Network error: ") + reply->errorString());
+        finishRequestAndDispatchPending();
         return;
     }
 
@@ -282,6 +305,7 @@ void AIServiceLayer::onReplyFinished(QNetworkReply *reply)
 
     if (doc.isNull()) {
         emit analysisError(QStringLiteral("Invalid JSON response from AI service"));
+        finishRequestAndDispatchPending();
         return;
     }
 
@@ -299,9 +323,11 @@ void AIServiceLayer::onReplyFinished(QNetworkReply *reply)
 
     if (analysisText.isEmpty()) {
         emit analysisError(QStringLiteral("Empty response from AI service"));
+        finishRequestAndDispatchPending();
         return;
     }
 
     emit requestProgress(100);
     emit analysisComplete(analysisText);
+    finishRequestAndDispatchPending();
 }

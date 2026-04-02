@@ -117,6 +117,9 @@ private:
     QComboBox     *m_languageCombo{nullptr};
     QCheckBox     *m_notificationsCheck{nullptr};
     QCheckBox     *m_loggingCheck{nullptr};
+    QCheckBox     *m_externalApiEnabledCheck{nullptr};
+    QLineEdit     *m_externalWebhookUrlEdit{nullptr};
+    QLineEdit     *m_externalApiKeyEdit{nullptr};
     QPushButton   *m_saveSettingsBtn{nullptr};
 
     int  m_totalThreats{0};

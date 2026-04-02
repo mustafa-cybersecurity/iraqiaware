@@ -43,6 +43,8 @@ signals:
      *  @param timestamp When the screenshot was taken.
      */
     void screenshotCaptured(const QByteArray &imageBytes, const QDateTime &timestamp);
+    void captureStarted();
+    void captureStopped();
 
     /** Emitted when an error occurs during capture. */
     void captureError(const QString &errorMessage);

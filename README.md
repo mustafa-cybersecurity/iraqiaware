@@ -19,6 +19,7 @@ English and Arabic support.
 | 🌑 **Dark Mode UI** | Catppuccin Mocha palette via Qt 6 Widgets + custom QSS stylesheet |
 | 🌐 **Bilingual** | Full English ↔ Arabic (RTL) UI localization |
 | 🔔 **Real-time Alerts** | In-app alert log + Windows system-tray notifications |
+| 🌐 **External Alert API** | Optional webhook forwarding for each detected threat |
 | 📝 **Logging** | Rotating log files via spdlog |
 | ⚙ **Config** | JSON configuration with per-provider API key storage |
 
@@ -78,6 +79,16 @@ cmake -B build -G "Visual Studio 17 2022" -A x64 ^
 cmake --build build --config Release
 ```
 
+### Windows (Easy one-command with CMake Presets)
+
+```powershell
+# Configure
+cmake --preset windows-msvc-release
+
+# Build
+cmake --build --preset build-windows-msvc-release
+```
+
 ### Windows (MinGW)
 
 ```bash
@@ -107,6 +118,34 @@ Edit via the **Settings** tab in the application, or directly in the JSON file.
 | **Anthropic Claude** | `claude-3-5-sonnet-20241022` | Requires an Anthropic API key |
 | **Ollama (local)** | `llava` | No key needed; run `ollama serve` locally |
 | **Custom** | user-defined | Any OpenAI-compatible `/chat/completions` endpoint |
+
+### External Alert Service API (Webhook)
+
+In **Settings → Monitoring**:
+
+- Enable **Forward alerts to external API**
+- Set **Webhook URL**
+- Optional: set **Webhook API Key** (sent as `Authorization: Bearer <key>`)
+
+Payload example:
+
+```json
+{
+  "source": "IraqiAware",
+  "severity": "HIGH",
+  "category": "Phishing/Suspicious Site",
+  "message": "Suspicious login page detected",
+  "recommendation": "Do not enter credentials and verify domain.",
+  "timestamp": "2026-04-02T05:00:00Z"
+}
+```
+
+### Real-time behavior
+
+- Screenshot capture uses a precise timer.
+- First screenshot is captured immediately when monitoring starts.
+- Minimum configurable interval is **250 ms**.
+- AI requests are coalesced (only the latest pending frame is queued) to avoid backlog and keep analysis near real-time.
 
 ---
 

@@ -380,11 +380,25 @@ QWidget *MainWindow::buildSettingsPage()
 
     monLayout->addWidget(new QLabel(QStringLiteral("Interval (ms):")), 0, 0);
     m_intervalSpin = new QSpinBox;
-    m_intervalSpin->setRange(1000, 60000);
-    m_intervalSpin->setSingleStep(1000);
+    m_intervalSpin->setRange(250, 60000);
+    m_intervalSpin->setSingleStep(250);
     m_intervalSpin->setValue(5000);
     m_intervalSpin->setSuffix(QStringLiteral(" ms"));
     monLayout->addWidget(m_intervalSpin, 0, 1);
+
+    m_externalApiEnabledCheck = new QCheckBox(QStringLiteral("Forward alerts to external API"));
+    monLayout->addWidget(m_externalApiEnabledCheck, 1, 0, 1, 2);
+
+    monLayout->addWidget(new QLabel(QStringLiteral("Webhook URL:")), 2, 0);
+    m_externalWebhookUrlEdit = new QLineEdit;
+    m_externalWebhookUrlEdit->setPlaceholderText(QStringLiteral("https://example.com/security-alerts"));
+    monLayout->addWidget(m_externalWebhookUrlEdit, 2, 1);
+
+    monLayout->addWidget(new QLabel(QStringLiteral("Webhook API Key:")), 3, 0);
+    m_externalApiKeyEdit = new QLineEdit;
+    m_externalApiKeyEdit->setEchoMode(QLineEdit::Password);
+    m_externalApiKeyEdit->setPlaceholderText(QStringLiteral("Optional bearer token"));
+    monLayout->addWidget(m_externalApiKeyEdit, 3, 1);
 
     layout->addWidget(monGroup);
 
@@ -433,6 +447,9 @@ QWidget *MainWindow::buildSettingsPage()
         m_modelEdit->setText(m_config->activeModel());
         m_customEndpointEdit->setText(m_config->customEndpoint());
         m_intervalSpin->setValue(m_config->screenshotIntervalMs());
+        m_externalApiEnabledCheck->setChecked(m_config->externalApiEnabled());
+        m_externalWebhookUrlEdit->setText(m_config->externalApiWebhookUrl());
+        m_externalApiKeyEdit->setText(m_config->externalApiKey());
 
         const QString lang = m_config->language();
         m_languageCombo->setCurrentIndex(lang == "ar" ? 1 : 0);
@@ -529,6 +546,9 @@ void MainWindow::onSettingsSaveClicked()
     const QString endpoint    = m_customEndpointEdit->text().trimmed();
     const int     interval    = m_intervalSpin->value();
     const QString lang        = m_languageCombo->currentData().toString();
+    const bool    externalApiEnabled = m_externalApiEnabledCheck->isChecked();
+    const QString externalWebhookUrl = m_externalWebhookUrlEdit->text().trimmed();
+    const QString externalApiKey = m_externalApiKeyEdit->text().trimmed();
 
     // Apply to config
     if (m_config) {
@@ -540,6 +560,9 @@ void MainWindow::onSettingsSaveClicked()
         m_config->setLanguage(lang);
         m_config->setNotificationsEnabled(m_notificationsCheck->isChecked());
         m_config->setLoggingEnabled(m_loggingCheck->isChecked());
+        m_config->setExternalApiEnabled(externalApiEnabled);
+        m_config->setExternalApiWebhookUrl(externalWebhookUrl);
+        m_config->setExternalApiKey(externalApiKey);
         m_config->save();
     }
 
@@ -558,6 +581,7 @@ void MainWindow::onSettingsSaveClicked()
     if (!model.isEmpty()) m_aiService->setModel(model);
     if (!endpoint.isEmpty()) m_aiService->setCustomEndpoint(endpoint);
     m_alertSystem->setNotificationsEnabled(m_notificationsCheck->isChecked());
+    m_alertSystem->configureExternalApi(externalApiEnabled, externalWebhookUrl, externalApiKey);
 
     // Apply language
     if (m_langMgr) {
