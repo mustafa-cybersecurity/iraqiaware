@@ -6,6 +6,8 @@
 #include "LanguageManager.h"
 #include "AlertSystem.h"
 #include "LoggingSystem.h"
+#include "AsyncAnalyzer.h"
+#include "CacheManager.h"
 
 #include <QApplication>
 #include <QCloseEvent>
@@ -21,6 +23,8 @@
 #include <QLineEdit>
 #include <QMenu>
 #include <QMessageBox>
+#include <QPointer>
+#include <QProgressBar>
 #include <QPushButton>
 #include <QScrollArea>
 #include <QSpinBox>
@@ -30,6 +34,8 @@
 #include <QTextEdit>
 #include <QTimer>
 #include <QVBoxLayout>
+
+#include <thread>
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -41,6 +47,7 @@ MainWindow::MainWindow(QWidget* parent)
     , m_ai       (std::make_unique<AIServiceLayer>())
     , m_analyzer (std::make_unique<SecurityAnalyzer>())
     , m_alerts   (std::make_unique<AlertSystem>())
+    , m_cache    (std::make_unique<CacheManager>())
 {
     m_config->load();
     m_lang->loadLanguage(m_config->getLanguage());
@@ -50,6 +57,9 @@ MainWindow::MainWindow(QWidget* parent)
     m_ai->setApiKey(m_config->getAIApiKey());
     m_ai->setModel(m_config->getAIModel());
     m_ai->setTimeout(m_config->getAITimeoutSec());
+
+    // AsyncAnalyzer owns a background worker thread – must be created after m_ai
+    m_asyncAnalyzer = std::make_unique<AsyncAnalyzer>(*m_ai, *m_cache);
 
     // Configure screenshot manager
     m_screenshot->setCaptureInterval(m_config->getCaptureIntervalSec());
@@ -177,6 +187,15 @@ void MainWindow::setupUi() {
 
     // Status bar
     statusBar()->showMessage(tr("Ready"));
+
+    // Indeterminate progress bar shown while AI analysis is running
+    m_progressBar = new QProgressBar(this);
+    m_progressBar->setRange(0, 0);           // indeterminate / busy mode
+    m_progressBar->setFixedWidth(160);
+    m_progressBar->setFixedHeight(14);
+    m_progressBar->setTextVisible(false);
+    m_progressBar->setVisible(false);
+    statusBar()->addPermanentWidget(m_progressBar);
 
     m_btnNavDashboard->setChecked(true);
 }
@@ -493,18 +512,21 @@ void MainWindow::toggleMonitoring() {
 
 // ── Screenshot → AI pipeline ──────────────────────────────────────────────────
 
-void MainWindow::onCaptureReady(const QString& base64, const QString& filePath) {
+void MainWindow::onCaptureReady(const QString& base64, const QString& /*filePath*/) {
     m_logOutput->append("📷 Screenshot captured → analysing with AI...");
+    setAnalyzingState(true);
 
-    // Analyse on the Qt thread (quick; cURL handles its own I/O)
-    m_ai->analyzeScreenshot(
+    // Dispatch to the background worker thread – UI thread is never blocked
+    m_asyncAnalyzer->analyzeAsync(
         base64.toStdString(),
-        [this, filePath](bool ok, const std::string& response, const std::string& err) {
-            QMetaObject::invokeMethod(this, "onAnalysisComplete",
-                Qt::QueuedConnection,
-                Q_ARG(bool,    ok),
-                Q_ARG(QString, QString::fromStdString(response)),
-                Q_ARG(QString, QString::fromStdString(err)));
+        [this](bool ok, const std::string& response, const std::string& err) {
+            // Called from worker thread → hop back to Qt main thread
+            QMetaObject::invokeMethod(this, [this, ok, response, err]() {
+                setAnalyzingState(false);
+                onAnalysisComplete(ok,
+                    QString::fromStdString(response),
+                    QString::fromStdString(err));
+            }, Qt::QueuedConnection);
         });
 }
 
@@ -530,6 +552,17 @@ void MainWindow::onAnalysisComplete(bool success,
             "<span style='color:#e67e22'>⚠ " +
             QString::number(result.threats.size()) +
             " threat(s) detected!</span>");
+    }
+}
+
+void MainWindow::setAnalyzingState(bool analyzing) {
+    m_progressBar->setVisible(analyzing);
+    if (analyzing) {
+        statusBar()->showMessage("Analyzing screenshot...");
+    } else if (m_monitoring) {
+        statusBar()->showMessage("Monitoring active");
+    } else {
+        statusBar()->showMessage("Ready");
     }
 }
 
@@ -629,28 +662,52 @@ void MainWindow::testApiConnection() {
         return;
     }
 
-    m_ai->setProvider(m_cmbProvider->currentData().toString().toStdString());
-    m_ai->setApiKey(key.toStdString());
-    m_ai->setModel(m_cmbModel->currentText().toStdString());
+    // Snapshot the current settings by value so the thread is self-contained
+    // and safe even if the window is closed before the request completes.
+    const std::string provider = m_cmbProvider->currentData().toString().toStdString();
+    const std::string apiKey   = key.toStdString();
+    const std::string model    = m_cmbModel->currentText().toStdString();
+
+    m_ai->setProvider(provider);
+    m_ai->setApiKey(apiKey);
+    m_ai->setModel(model);
 
     statusBar()->showMessage("Testing API connection...");
+    m_progressBar->setVisible(true);
+    m_btnTestApi->setEnabled(false);
 
-    // Send a minimal request with a blank image placeholder
-    m_ai->analyzeScreenshot("", [this](bool ok,
-                                        const std::string& /*resp*/,
-                                        const std::string& err) {
-        QMetaObject::invokeMethod(this, [this, ok, err = QString::fromStdString(err)]() {
-            if (ok) {
-                QMessageBox::information(this, "Test Connection",
-                    "✓ API connection successful!");
-                statusBar()->showMessage("API test passed");
-            } else {
-                QMessageBox::warning(this, "Test Connection",
-                    "✗ Connection failed:\n" + err);
-                statusBar()->showMessage("API test failed");
-            }
-        }, Qt::QueuedConnection);
-    });
+    // Run the test request on a background thread so the UI stays responsive.
+    // Use a local AIServiceLayer instance built from the value-copied config to
+    // avoid accessing this->m_ai after the window may have been destroyed.
+    // QPointer guards the UI update against window destruction during the request.
+    QPointer<MainWindow> guard(this);
+    std::thread([guard, provider, apiKey, model]() {
+        AIServiceLayer testAi;
+        testAi.setProvider(provider);
+        testAi.setApiKey(apiKey);
+        testAi.setModel(model);
+        testAi.setMaxRetries(0); // no retries for a connectivity test
+
+        testAi.analyzeScreenshot("",
+            [guard](bool ok, const std::string& /*resp*/, const std::string& err) {
+                if (!guard) return; // window was destroyed – nothing to update
+                QMetaObject::invokeMethod(guard, [guard, ok, err]() {
+                    if (!guard) return;
+                    guard->m_progressBar->setVisible(false);
+                    guard->m_btnTestApi->setEnabled(true);
+                    if (ok) {
+                        QMessageBox::information(guard, "Test Connection",
+                            "✓ API connection successful!");
+                        guard->statusBar()->showMessage("API test passed");
+                    } else {
+                        QMessageBox::warning(guard, "Test Connection",
+                            "✗ Connection failed:\n" +
+                            QString::fromStdString(err));
+                        guard->statusBar()->showMessage("API test failed");
+                    }
+                }, Qt::QueuedConnection);
+            });
+    }).detach();
 }
 
 void MainWindow::onLanguageChanged(int /*index*/) {

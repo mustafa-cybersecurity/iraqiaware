@@ -14,10 +14,13 @@ class ConfigManager;
 class LanguageManager;
 class AlertSystem;
 class LoggingSystem;
+class AsyncAnalyzer;
+class CacheManager;
 
 // Qt forward declarations
 QT_BEGIN_NAMESPACE
 class QLabel;
+class QProgressBar;
 class QTableWidget;
 class QPushButton;
 class QStackedWidget;
@@ -86,6 +89,9 @@ private:
     void addAlertRow(const ThreatInfo& threat);
     void showNotificationBanner(const ThreatInfo& threat);
 
+    // Show/hide the analysis-in-progress indicator
+    void setAnalyzingState(bool analyzing);
+
     // ── Core components ──────────────────────────────────────────────────────
     std::unique_ptr<ConfigManager>    m_config;
     std::unique_ptr<LanguageManager>  m_lang;
@@ -93,6 +99,8 @@ private:
     std::unique_ptr<AIServiceLayer>   m_ai;
     std::unique_ptr<SecurityAnalyzer> m_analyzer;
     std::unique_ptr<AlertSystem>      m_alerts;
+    std::unique_ptr<CacheManager>     m_cache;
+    std::unique_ptr<AsyncAnalyzer>    m_asyncAnalyzer;
 
     // ── Qt UI elements ───────────────────────────────────────────────────────
     QStackedWidget* m_stack        = nullptr;
@@ -133,6 +141,9 @@ private:
 
     // Refresh timer
     QTimer*          m_refreshTimer= nullptr;
+
+    // Indeterminate progress bar shown in status bar while AI analyses a frame
+    QProgressBar*    m_progressBar = nullptr;
 
     // Monitoring state
     bool             m_monitoring  = false;

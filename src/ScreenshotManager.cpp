@@ -94,6 +94,12 @@ void ScreenshotManager::setCaptureInterval(int seconds) {
     m_captureIntervalSec = std::max(1, seconds);
 }
 
+void ScreenshotManager::setDeltaDetectionEnabled(bool enabled) {
+    std::lock_guard<std::mutex> lk(m_mutex);
+    m_deltaDetection = enabled;
+    if (!enabled) m_lastCaptureHash.clear();
+}
+
 std::string ScreenshotManager::getLastScreenshotPath() const {
     std::lock_guard<std::mutex> lk(m_mutex);
     return m_lastScreenshotPath;
@@ -107,11 +113,32 @@ void ScreenshotManager::captureLoop() {
         std::string b64 = doCapture(filePath);
 
         if (!b64.empty()) {
-            ++m_captureCount;
+            CaptureCallback callbackToInvoke;
+            bool shouldInvoke = false;
+
             {
                 std::lock_guard<std::mutex> lk(m_mutex);
-                m_lastScreenshotPath = filePath;
-                if (m_callback) m_callback(b64, filePath);
+
+                if (m_deltaDetection) {
+                    const std::string hash = computeImageHash(b64);
+                    if (hash == m_lastCaptureHash) {
+                        LOG_DEBUG("ScreenshotManager: screen unchanged, skipping callback");
+                    } else {
+                        m_lastCaptureHash    = hash;
+                        m_lastScreenshotPath = filePath;
+                        shouldInvoke         = true;
+                    }
+                } else {
+                    m_lastScreenshotPath = filePath;
+                    shouldInvoke         = true;
+                }
+
+                if (shouldInvoke) callbackToInvoke = m_callback;
+            }
+
+            if (shouldInvoke) {
+                ++m_captureCount;
+                if (callbackToInvoke) callbackToInvoke(b64, filePath);
             }
         }
 
@@ -220,4 +247,23 @@ std::string ScreenshotManager::toBase64(const std::vector<uint8_t>& data) {
 
 void ScreenshotManager::ensureOutputDir() {
     std::filesystem::create_directories(m_outputDir);
+}
+
+// Fast hash over a sampled subset of the Base64 image string.
+// Sampling every N-th character gives a good signal of visual change
+// without hashing the entire (potentially large) string.
+std::string ScreenshotManager::computeImageHash(const std::string& base64Data) {
+    // FNV-1a 64-bit; sample up to kHashSampleSize bytes for speed
+    static constexpr size_t kHashSampleSize = 4096;
+    uint64_t hash = 14695981039346656037ULL;
+    const size_t step = (base64Data.size() > kHashSampleSize)
+                        ? (base64Data.size() / kHashSampleSize)
+                        : 1;
+    for (size_t i = 0; i < base64Data.size(); i += step) {
+        hash ^= static_cast<unsigned char>(base64Data[i]);
+        hash *= 1099511628211ULL;
+    }
+    std::ostringstream ss;
+    ss << std::hex << std::setw(16) << std::setfill('0') << hash;
+    return ss.str();
 }
